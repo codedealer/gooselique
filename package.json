@@ -28,6 +28,8 @@
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^20.11.5",
     "@types/ws": "^8.5.10",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.4",
     "pino-pretty": "^11.0.0",
     "prettier": "^3.2.4",
     "tsc-watch": "^6.0.4",
@@ -42,6 +44,14 @@
     "dev": "npm run build && npm run start",
     "watch:start": "tsc-watch --onSuccess \"npm run start\"",
     "format": "prettier --write \"src/\""
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": "prettier --write"
   },
   "packageManager": "pnpm@8.15.6+sha512.77b89e9be77a2b06ad8f403a19cae5e22976f61023f98ad323d5c30194958ebc02ee0a6ae5d13ee454f6134e4e8caf29a05f0b1a0e1d2b17bca6b6a1f1159f86"
 }
