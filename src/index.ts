@@ -1,7 +1,12 @@
-import { LogLevel, SapphireClient } from '@sapphire/framework';
+import {
+  ApplicationCommandRegistries,
+  container,
+  LogLevel,
+  RegisterBehavior,
+  SapphireClient,
+} from '@sapphire/framework';
 import { GatewayIntentBits } from 'discord.js';
 import { join } from 'path';
-import { ApplicationCommandRegistries, container, RegisterBehavior } from '@sapphire/framework';
 import { setup } from '@skyra/env-utilities';
 import { rootDir } from './lib/constants';
 import { Stopwatch } from '@sapphire/stopwatch';
@@ -23,7 +28,7 @@ const main = async () => {
 
   container.appConfig = await config();
 
-  container.messagesStore = await messagesStoreFactory(container.appConfig.data);
+  container.appStore.messagesStore = await messagesStoreFactory(container.appConfig.data);
 
   const prod = process.env.MODE === 'production';
   const path =

@@ -10,7 +10,7 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
     if (!authorId) return;
 
     try {
-      await this.container.messagesStore.update((data) => {
+      await this.container.appStore.messagesStore.update((data) => {
         if (!data.cache[guildId]) data.cache[guildId] = {};
         if (!Array.isArray(data.cache[guildId][authorId])) data.cache[guildId][authorId] = [];
 

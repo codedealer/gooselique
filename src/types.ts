@@ -8,6 +8,13 @@ export interface DataBaseDriver<T> {
   update(fn: (data: T) => unknown): Promise<void>;
 }
 
+export interface StoreConfig {
+  driver: 'json' | 'memory';
+  path: string;
+  flushInterval: number;
+  TTL: number;
+}
+
 export interface Config {
   logs: {
     level: LogLevel;
@@ -15,12 +22,7 @@ export interface Config {
   };
   persistence: {
     path: string;
-    messages: {
-      driver: 'json' | 'memory';
-      path: string;
-      flushInterval: number;
-      TTL: number;
-    };
+    messages: StoreConfig;
   };
   botAdmins: string[];
   alertChannel: {
@@ -52,6 +54,8 @@ declare module '@sapphire/pieces' {
     onlineWatch: Stopwatch;
     processWatch: Stopwatch;
     appConfig: DataBaseDriver<Config>;
-    messagesStore: DataBaseDriver<MessagesStoreData>;
+    appStore: {
+      messagesStore: DataBaseDriver<MessagesStoreData>;
+    }
   }
 }
