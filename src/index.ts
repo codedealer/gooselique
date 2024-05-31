@@ -15,6 +15,8 @@ import Logger from './logger';
 import pino from 'pino';
 import pretty from 'pino-pretty';
 import messagesStoreFactory from './store/messagesStore';
+import clientFactory from './chat/client';
+import promptStoreFactory from './chat/promptStore';
 
 // Set default behavior to bulk overwrite
 ApplicationCommandRegistries.setDefaultBehaviorWhenNotIdentical(RegisterBehavior.BulkOverwrite);
@@ -28,16 +30,18 @@ const main = async () => {
 
   container.appConfig = await config();
 
-  container.appStore.messagesStore = await messagesStoreFactory(container.appConfig.data);
+  container.appStore = {
+    messagesStore: await messagesStoreFactory(container.appConfig.data),
+  };
 
   const prod = process.env.MODE === 'production';
-  const path =
+  const logPath =
     typeof container.appConfig.data.logs.path === 'string'
       ? container.appConfig.data.logs.path
       : false;
   let target;
   if (prod) {
-    target = path ? pino.destination(path) : pino.destination('/dev/null');
+    target = logPath ? pino.destination(logPath) : pino.destination('/dev/null');
   } else {
     target = pretty({
       colorize: true,
@@ -45,6 +49,19 @@ const main = async () => {
   }
 
   const logger = new Logger(prod ? container.appConfig.data.logs.level : LogLevel.Debug, target);
+
+  container.chat = {};
+  if (container.appConfig.data.chat.endpoint && process.env.LLM_TOKEN) {
+    container.chat.client = clientFactory(container.appConfig.data.chat, process.env.LLM_TOKEN);
+
+    if (!container.appConfig.data.chat.promptFile) {
+      logger.warn(
+        'No prompt file specified for LLM, it will run without a prompt. You can specify the path to prompt file in the config.',
+      );
+    } else {
+      container.chat.prompt = await promptStoreFactory(container.appConfig.data.chat.promptFile);
+    }
+  }
 
   const client = new SapphireClient({
     disableMentionPrefix: true,
@@ -64,7 +81,6 @@ const main = async () => {
   try {
     client.logger.info('Logging in');
     await client.login(process.env.DISCORD_TOKEN);
-    client.logger.info('logged in');
   } catch (error) {
     client.logger.fatal(error);
     await client.destroy();
