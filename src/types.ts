@@ -1,5 +1,5 @@
 import { Stopwatch } from '@sapphire/stopwatch';
-import { LogLevel } from '@sapphire/framework';
+import { BucketScope, LogLevel } from '@sapphire/framework';
 import OpenAI from 'openai';
 
 export interface DataBaseDriver<T> {
@@ -41,7 +41,15 @@ export interface Config {
     guildId: string;
     channelId: string;
   } | null;
-  allowCommandsIn?: Record<string, string[]>;
+  commands: {
+    [key: string]: {
+      guilds?: string[];
+      cooldownDelay?: number;
+      cooldownLimit?: number;
+      cooldownFilteredUsers?: string[];
+      coolDownScope?: BucketScope;
+    };
+  };
 }
 
 export interface ChatMessage {

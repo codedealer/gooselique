@@ -1,5 +1,6 @@
 import {
   ApplicationCommandRegistries,
+  BucketScope,
   container,
   LogLevel,
   RegisterBehavior,
@@ -76,6 +77,10 @@ const main = async () => {
       GatewayIntentBits.MessageContent,
     ],
     loadMessageCommandListeners: false,
+    defaultCooldown: {
+      filteredUsers: container.appConfig.data.botAdmins,
+      scope: BucketScope.Channel,
+    },
   });
 
   try {

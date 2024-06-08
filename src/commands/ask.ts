@@ -3,23 +3,27 @@ import OpenAI from 'openai';
 import composePrompt from '../chat/prompt';
 import { userMentionRegex } from '../lib/constants';
 import { processReply } from '../chat/client';
+import { generateCommandOptions } from '../lib/generateCommandOptions';
 import ChatCompletionMessageParam = OpenAI.ChatCompletionMessageParam;
 
 export class AskCommand extends Command {
+  public constructor(context: Command.LoaderContext) {
+    super(context, {
+      name: 'ask',
+      ...generateCommandOptions('ask'),
+    });
+  }
+
   public override registerApplicationCommands(registry: Command.Registry) {
     if (!this.container.chat.client) return;
 
-    const name = 'ask';
-    const configData = this.container.appConfig.data;
-    const guildIds =
-      configData.allowCommandsIn && name in configData.allowCommandsIn
-        ? configData.allowCommandsIn[name]
-        : undefined;
+    const commandConfig = this.container.appConfig.data.commands;
+    const guildIds = this.name in commandConfig ? commandConfig[this.name].guilds : undefined;
 
     registry.registerChatInputCommand(
       (builder) => {
         return builder
-          .setName(name)
+          .setName(this.name)
           .setDescription('Ask the bot a question')
           .addStringOption((option) => {
             return option

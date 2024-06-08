@@ -1,7 +1,15 @@
 import { Command } from '@sapphire/framework';
 import { DurationFormatter } from '@sapphire/time-utilities';
+import { generateCommandOptions } from '../lib/generateCommandOptions';
 
 export class UptimeCommand extends Command {
+  public constructor(context: Command.LoaderContext) {
+    super(context, {
+      name: 'uptime',
+      ...generateCommandOptions('uptime'),
+    });
+  }
+
   public override registerApplicationCommands(registry: Command.Registry) {
     registry.registerChatInputCommand((builder) => {
       return builder.setName('uptime').setDescription("Check the bot's uptime");

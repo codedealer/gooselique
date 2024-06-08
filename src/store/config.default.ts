@@ -30,8 +30,8 @@ const defaultConfig: Config = {
   botAdmins: [],
   alertChannel: null,
   // Can restrict commands to specific servers
-  // Key is a command name, value is an array of guild ids
-  allowCommandsIn: {},
+  // Key is a command name, value is an options object
+  commands: {},
 };
 
 export default defaultConfig;
