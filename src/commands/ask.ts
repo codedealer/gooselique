@@ -2,24 +2,36 @@ import { Command } from '@sapphire/framework';
 import OpenAI from 'openai';
 import composePrompt from '../chat/prompt';
 import { userMentionRegex } from '../lib/constants';
-import { MessageLimits } from '@sapphire/discord.js-utilities';
+import { processReply } from '../chat/client';
 import ChatCompletionMessageParam = OpenAI.ChatCompletionMessageParam;
 
 export class AskCommand extends Command {
   public override registerApplicationCommands(registry: Command.Registry) {
     if (!this.container.chat.client) return;
 
-    registry.registerChatInputCommand((builder) => {
-      return builder
-        .setName('ask')
-        .setDescription('Ask the bot a question')
-        .addStringOption((option) => {
-          return option
-            .setName('question')
-            .setDescription('What question do you want to ask?')
-            .setRequired(true);
-        });
-    });
+    const name = 'ask';
+    const configData = this.container.appConfig.data;
+    const guildIds =
+      configData.allowCommandsIn && name in configData.allowCommandsIn
+        ? configData.allowCommandsIn[name]
+        : undefined;
+
+    registry.registerChatInputCommand(
+      (builder) => {
+        return builder
+          .setName(name)
+          .setDescription('Ask the bot a question')
+          .addStringOption((option) => {
+            return option
+              .setName('question')
+              .setDescription('What question do you want to ask?')
+              .setRequired(true);
+          });
+      },
+      {
+        guildIds,
+      },
+    );
   }
 
   public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
@@ -81,15 +93,14 @@ export class AskCommand extends Command {
       const response = await this.container.chat.client.chat.completions.create({
         model: this.container.appConfig.data.chat.model,
         messages,
+        ...this.container.appConfig.data.chat.params,
       });
 
       // Extract the model's message from the response
-      let aiMessage = response.choices[0].message.content;
-
-      // trim to max length
-      if (aiMessage && aiMessage.length > MessageLimits.MaximumLength) {
-        aiMessage = aiMessage.slice(0, MessageLimits.MaximumLength);
-      }
+      const aiMessage =
+        Array.isArray(response.choices) && response.choices.length > 0
+          ? processReply(response.choices[0])
+          : null;
 
       // Send the model's message as a reply to the user
       return interaction.editReply(aiMessage ?? 'Sorry, I cannot answer that.');

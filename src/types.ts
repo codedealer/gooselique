@@ -9,6 +9,8 @@ export interface DataBaseDriver<T> {
   update(fn: (data: T) => unknown): Promise<void>;
 }
 
+export type ServerList = Record<string, string[] | 'all'> | 'all';
+
 export interface StoreConfig {
   driver: 'json' | 'memory';
   path: string;
@@ -28,15 +30,18 @@ export interface Config {
   chat: {
     endpoint: string | null;
     model?: string;
-    allowChatIn?: Record<string, string[] | 'all'> | 'all';
+    allowChatIn?: ServerList;
     usernameInPrompt?: boolean;
     promptFile?: string;
+    maxRetries?: number;
+    params?: Record<string, string>;
   };
   botAdmins: string[];
   alertChannel: {
     guildId: string;
     channelId: string;
   } | null;
+  allowCommandsIn?: Record<string, string[]>;
 }
 
 export interface ChatMessage {
