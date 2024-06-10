@@ -32,6 +32,22 @@ const defaultConfig: Config = {
   // Can restrict commands to specific servers
   // Key is a command name, value is an options object
   commands: {},
+  moderation: [
+    {
+      id: 'default_flood_protection',
+      enabled: true,
+      rateLimit: {
+        channels: 1,
+        messages: 4,
+        cooldown: 15000,
+      },
+      policy: 'flood_protection',
+      action: {
+        name: 'mute',
+        reason: 'flooding',
+      },
+    },
+  ],
 };
 
 export default defaultConfig;

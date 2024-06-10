@@ -1,5 +1,6 @@
 import { Events, Listener } from '@sapphire/framework';
 import { Message } from 'discord.js';
+import { detect } from '../lib/moderator';
 
 export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
   public override async run(message: Message) {
@@ -25,6 +26,42 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
       });
     } catch (e) {
       this.container.logger.error(e, 'Failed to update message store');
+      return;
+    }
+
+    // Auto moderation
+    for (const cfg of this.container.appConfig.data.moderation) {
+      if (!cfg.enabled) continue;
+
+      const detected = await detect(cfg, message);
+      if (!detected) continue;
+
+      this.container.logger.info(`Detected message for moderation: ${content}`);
+
+      try {
+        // TODO: check for repeat offenses
+        const ActionClass =
+          cfg.action.name in this.container.actions
+            ? this.container.actions[cfg.action.name]
+            : null;
+        if (ActionClass) {
+          const action = new ActionClass(cfg.action.reason, cfg.action.params);
+          if (!action.run) {
+            throw new Error(`Action ${cfg.action.name} is missing a run method`);
+          }
+
+          const isFinal = await action.run(message);
+          // TODO: log action
+          if (isFinal) return;
+        } else {
+          this.container.logger.warn(`Action ${cfg.action.name} not found`);
+        }
+      } catch (e) {
+        this.container.logger.error(
+          e,
+          `Failed to run action ${cfg.action.name} for message: ${content}`,
+        );
+      }
     }
   }
 }

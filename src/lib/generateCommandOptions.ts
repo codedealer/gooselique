@@ -8,6 +8,6 @@ export const generateCommandOptions = (name: string): Command.Options => {
     cooldownDelay: commandConfig.cooldownDelay,
     cooldownLimit: commandConfig.cooldownLimit,
     cooldownFilteredUsers: commandConfig.cooldownFilteredUsers,
-    cooldownScope: commandConfig.coolDownScope,
+    cooldownScope: commandConfig.cooldownScope,
   };
 };

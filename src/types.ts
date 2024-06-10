@@ -1,6 +1,7 @@
 import { Stopwatch } from '@sapphire/stopwatch';
 import { BucketScope, LogLevel } from '@sapphire/framework';
 import OpenAI from 'openai';
+import { Message } from 'discord.js';
 
 export interface DataBaseDriver<T> {
   data: T;
@@ -47,9 +48,26 @@ export interface Config {
       cooldownDelay?: number;
       cooldownLimit?: number;
       cooldownFilteredUsers?: string[];
-      coolDownScope?: BucketScope;
+      cooldownScope?: BucketScope;
     };
   };
+  moderation: {
+    id: string;
+    enabled: boolean;
+    rateLimit: {
+      channels?: number;
+      messages: number;
+      cooldown: number;
+    };
+    policy: 'content_filter' | 'flood_protection';
+    contentFilter?: string;
+    action: Action;
+    repeatedViolationAction?: {
+      times: number;
+      interval: number;
+      action: Action;
+    };
+  }[];
 }
 
 export interface ChatMessage {
@@ -102,6 +120,17 @@ export interface Prompt {
   memory?: Record<string, string>;
 }
 
+export interface Action {
+  name: string;
+  reason?: string;
+  params?: Record<string, string>;
+  run?(message: Message): Promise<boolean>;
+}
+
+export interface ContentPolicyEnforcer {
+  execute(message: CacheMessage): Promise<boolean>;
+}
+
 declare module '@sapphire/pieces' {
   interface Container {
     onlineWatch: Stopwatch;
@@ -114,5 +143,6 @@ declare module '@sapphire/pieces' {
       client?: OpenAI;
       prompt?: DataBaseDriver<Prompt>;
     };
+    actions: Record<string, new (reason?: string, params?: Record<string, string>) => Action>;
   }
 }

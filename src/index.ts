@@ -18,6 +18,9 @@ import pretty from 'pino-pretty';
 import messagesStoreFactory from './store/messagesStore';
 import clientFactory from './chat/client';
 import promptStoreFactory from './chat/promptStore';
+import path from 'node:path';
+import * as fs from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 // Set default behavior to bulk overwrite
 ApplicationCommandRegistries.setDefaultBehaviorWhenNotIdentical(RegisterBehavior.BulkOverwrite);
@@ -64,6 +67,35 @@ const main = async () => {
     }
   }
 
+  const actionsDir = path.join(__dirname, 'actions');
+  const actionFiles = fs.readdirSync(actionsDir);
+
+  // Load all action classes and add them to the container
+  container.actions = {};
+  for (const file of actionFiles) {
+    try {
+      // Import the class file
+      if (!file.endsWith('.js')) continue;
+      const fileURL = pathToFileURL(path.join(actionsDir, file));
+      const ActionClassModule = await import(fileURL.href);
+      const ActionClass = ActionClassModule.default.default;
+
+      const instance = new ActionClass();
+      if (!(instance instanceof ActionClass)) {
+        throw new Error(`Action class ${file} is not an instance of Action`);
+      }
+      if (!instance.name) {
+        throw new Error(`Action class ${file} is missing a name property`);
+      }
+
+      logger.debug(`Loaded action class ${instance.name}`);
+
+      container.actions[instance.name] = ActionClass;
+    } catch (error) {
+      logger.error(error, `Failed to load action class ${file}`);
+    }
+  }
+
   const client = new SapphireClient({
     disableMentionPrefix: true,
     defaultPrefix: null,
@@ -83,6 +115,12 @@ const main = async () => {
     },
   });
 
+  process.on('unhandledRejection', (error) => {
+    logger.fatal('Unhandled promise rejection:', error);
+
+    process.exit(1);
+  });
+
   try {
     client.logger.info('Logging in');
     await client.login(process.env.DISCORD_TOKEN);
@@ -91,12 +129,6 @@ const main = async () => {
     await client.destroy();
     process.exit(1);
   }
-
-  process.on('unhandledRejection', (error) => {
-    logger.fatal('Unhandled promise rejection:', error);
-
-    process.exit(1);
-  });
 };
 
 void main();
