@@ -36,7 +36,9 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
       const detected = await detect(cfg, message);
       if (!detected) continue;
 
-      this.container.logger.info(`Detected message for moderation: ${content}`);
+      this.container.logger.info(
+        `Detected message for moderation from ${author.username}: ${content}`,
+      );
 
       try {
         // TODO: check for repeat offenses

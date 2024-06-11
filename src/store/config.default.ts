@@ -45,6 +45,9 @@ const defaultConfig: Config = {
       action: {
         name: 'mute',
         reason: 'flooding',
+        params: {
+          duration: 60000,
+        },
       },
     },
   ],

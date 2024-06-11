@@ -123,7 +123,7 @@ export interface Prompt {
 export interface Action {
   name: string;
   reason?: string;
-  params?: Record<string, string>;
+  params?: Record<string, string | number | boolean>;
   run?(message: Message): Promise<boolean>;
 }
 
@@ -143,6 +143,6 @@ declare module '@sapphire/pieces' {
       client?: OpenAI;
       prompt?: DataBaseDriver<Prompt>;
     };
-    actions: Record<string, new (reason?: string, params?: Record<string, string>) => Action>;
+    actions: Record<string, new (reason?: string, params?: Action['params']) => Action>;
   }
 }
