@@ -2,6 +2,7 @@ import { CacheMessage, Config, ContentPolicyEnforcer } from '../types';
 import { Message } from 'discord.js';
 import { container } from '@sapphire/framework';
 import { FloodProtector } from './FloodProtector';
+import { ContentFilter } from './ContentFilter';
 
 export const detect = async (config: Config['moderation'][0], message: Message) => {
   // Validate the config
@@ -21,6 +22,13 @@ export const detect = async (config: Config['moderation'][0], message: Message) 
   switch (config.policy) {
     case 'flood_protection':
       enforcer = new FloodProtector();
+      break;
+    case 'content_filter':
+      if (!config.contentFilter) {
+        container.logger.warn(`Missing content filter for moderation: ${config.id}`);
+        return false;
+      }
+      enforcer = new ContentFilter(config.contentFilter);
       break;
     default:
       container.logger.warn(`Unknown policy for moderation: ${config.id}: ${config.policy}`);
