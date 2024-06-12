@@ -47,6 +47,7 @@ const defaultConfig: Config = {
         reason: 'flooding',
         params: {
           duration: 60000,
+          deleteMessagesInterval: 15000,
         },
       },
     },

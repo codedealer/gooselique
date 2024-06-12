@@ -9,6 +9,7 @@ class MuteAction implements Action {
   public reason?: string;
   public params?: Action['params'];
   private duration: number;
+  private deleteMessagesInterval?: number;
 
   public constructor(reason?: string, params?: Action['params']) {
     this.reason = reason ?? 'no reason.';
@@ -21,21 +22,17 @@ class MuteAction implements Action {
       container.logger?.info('No valid duration provided for mute action, using 1 minute.');
       this.duration = 60000;
     }
+
+    if (params?.deleteMessagesInterval && Number.isSafeInteger(params.deleteMessagesInterval)) {
+      this.deleteMessagesInterval =
+        Number(params.deleteMessagesInterval) > 0 ? Number(params.deleteMessagesInterval) : 15000;
+    }
   }
 
   public async run(message: Message) {
-    const reply = `Muting user ${message.author.username}[${message.author.id}] in ${message.guild?.name}[${message.guild?.id}] for ${this.reason}\nDuration: ${new DurationFormatter().format(this.duration)}`;
-    container.logger.debug(reply);
-
-    if (message.member?.kickable) {
-      container.logger.debug(
-        `User ${message.author.username}[${message.author.id}] can be kicked out`,
-      );
-    } else {
-      container.logger.debug(
-        `User ${message.author.username}[${message.author.id}] cannot be kicked out`,
-      );
-    }
+    container.logger.debug(
+      `Muting user ${message.author.username}[${message.author.id}] in ${message.guild?.name}[${message.guild?.id}]\nReason: ${this.reason}\nDuration: ${new DurationFormatter().format(this.duration)}`,
+    );
 
     if (!message.member?.moderatable) {
       throw new Error(
@@ -44,8 +41,16 @@ class MuteAction implements Action {
     }
 
     await message.member!.timeout(this.duration, this.reason);
-    await deleteMessagesFromUser(message.guildId!, message.author.id);
-    await message.channel.send(reply);
+    if (this.deleteMessagesInterval) {
+      await deleteMessagesFromUser(
+        message.guildId!,
+        message.author.id,
+        this.deleteMessagesInterval,
+      );
+    }
+    await message.channel.send(
+      `User ${message.author.username} has been muted for ${new DurationFormatter().format(this.duration)}\nReason: ${this.reason}`,
+    );
 
     return true;
   }
