@@ -51,6 +51,24 @@ const defaultConfig: Config = {
         },
       },
     },
+    {
+      id: 'default_link_spam',
+      enabled: true,
+      rateLimit: {
+        messages: 4,
+        channels: 4,
+        cooldown: 30000,
+      },
+      policy: 'content_filter',
+      contentFilter: 'https?://.+',
+      action: {
+        name: 'ban',
+        reason: 'link spam',
+        params: {
+          deleteMessageSeconds: 30,
+        },
+      },
+    },
   ],
 };
 
