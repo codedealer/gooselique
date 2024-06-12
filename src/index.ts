@@ -126,6 +126,10 @@ const main = async () => {
     await client.login(process.env.DISCORD_TOKEN);
   } catch (error) {
     client.logger.fatal(error);
+    // reset store timers
+    for (const store of Object.values(container.appStore)) {
+      store.destroy();
+    }
     await client.destroy();
     process.exit(1);
   }

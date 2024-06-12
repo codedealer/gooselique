@@ -3,11 +3,20 @@ import { BucketScope, LogLevel } from '@sapphire/framework';
 import OpenAI from 'openai';
 import { Message } from 'discord.js';
 
+export interface Flushable {
+  lastFlush: number;
+  dirty: boolean;
+}
+
 export interface DataBaseDriver<T> {
   data: T;
   read(): Promise<void>;
   write(): Promise<void>;
   update(fn: (data: T) => unknown): Promise<void>;
+}
+
+export interface FlushableDataBaseDriver<T extends Flushable> extends DataBaseDriver<T> {
+  destroy(): void;
 }
 
 export type ServerList = Record<string, string[] | 'all'> | 'all';
@@ -109,9 +118,7 @@ export interface CacheMessage {
 type GuildAuthorMessageCache = Record<string, CacheMessage[]>;
 type GuildMessageCache = Record<string, GuildAuthorMessageCache>;
 
-export interface MessagesStoreData {
-  lastFlush: number;
-  dirty: boolean;
+export interface MessagesStoreData extends Flushable {
   cache: GuildMessageCache;
 }
 
@@ -137,7 +144,7 @@ declare module '@sapphire/pieces' {
     processWatch: Stopwatch;
     appConfig: DataBaseDriver<Config>;
     appStore: {
-      messagesStore: DataBaseDriver<MessagesStoreData>;
+      messagesStore: FlushableDataBaseDriver<MessagesStoreData>;
     };
     chat: {
       client?: OpenAI;
