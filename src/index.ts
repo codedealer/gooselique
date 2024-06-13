@@ -35,7 +35,7 @@ const main = async () => {
   container.appConfig = await config();
 
   container.appStore = {
-    messagesStore: await messagesStoreFactory(container.appConfig.data),
+    messagesStore: await messagesStoreFactory(container.appConfig.data.persistence.messages),
   };
 
   const prod = process.env.MODE === 'production';

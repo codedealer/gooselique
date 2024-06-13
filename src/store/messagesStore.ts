@@ -1,4 +1,4 @@
-import { Config, DataBaseDriver, FlushableDataBaseDriver, MessagesStoreData } from '../types';
+import { DataBaseDriver, FlushableDataBaseDriver, MessagesStoreData, StoreConfig } from '../types';
 import { Time } from '@sapphire/time-utilities';
 import BaseStore from './baseStore';
 
@@ -41,17 +41,17 @@ class MessagesStore extends BaseStore<MessagesStoreData> {
 }
 
 const messagesStoreFactory = async (
-  config: Config,
+  config: StoreConfig,
 ): Promise<FlushableDataBaseDriver<MessagesStoreData>> => {
-  if (config.persistence.messages.driver === 'json' && !config.persistence.messages.path) {
+  if (config.driver === 'json' && !config.path) {
     throw new Error('No messages path provided in config');
   }
 
   const { Low } = await import('lowdb');
   let db: DataBaseDriver<MessagesStoreData>;
-  if (config.persistence.messages.driver === 'json') {
+  if (config.driver === 'json') {
     const { JSONFile } = await import('lowdb/node');
-    db = new Low<MessagesStoreData>(new JSONFile(config.persistence.messages.path), defaultStore);
+    db = new Low<MessagesStoreData>(new JSONFile(config.path), defaultStore);
   } else {
     const { Memory } = await import('lowdb');
     db = new Low<MessagesStoreData>(new Memory(), defaultStore);
@@ -61,10 +61,8 @@ const messagesStoreFactory = async (
 
   return new MessagesStore(
     db,
-    config.persistence.messages.TTL > 0 ? config.persistence.messages.TTL : Time.Minute * 10,
-    config.persistence.messages.flushInterval > 0
-      ? config.persistence.messages.flushInterval
-      : Time.Minute * 10,
+    config.TTL > 0 ? config.TTL : Time.Minute * 10,
+    config.flushInterval > 0 ? config.flushInterval : Time.Minute * 10,
   );
 };
 
