@@ -53,7 +53,23 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
           }
 
           const isFinal = await action.run(message);
-          // TODO: log action
+
+          await this.container.appStore.actionRegistryStore.update((data) => {
+            if (!data.cache[guildId]) data.cache[guildId] = {};
+            if (!Array.isArray(data.cache[guildId][authorId])) data.cache[guildId][authorId] = [];
+
+            data.cache[guildId][authorId].push({
+              policyId: cfg.id,
+              createdTimestamp,
+              guildId,
+              authorId,
+              username: author.username,
+              action: {
+                name: cfg.action.name,
+              },
+            });
+          });
+
           if (isFinal) return;
         } else {
           this.container.logger.warn(`Action ${cfg.action.name} not found`);
