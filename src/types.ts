@@ -16,6 +16,7 @@ export interface DataBaseDriver<T> {
 }
 
 export interface FlushableDataBaseDriver<T extends Flushable> extends DataBaseDriver<T> {
+  flush(now: number): Promise<void>;
   destroy(): void;
 }
 
@@ -36,6 +37,7 @@ export interface Config {
   persistence: {
     path: string;
     messages: StoreConfig;
+    actionRegistry: StoreConfig;
   };
   chat: {
     endpoint: string | null;
@@ -73,7 +75,7 @@ export interface Config {
     action: Action;
     repeatedViolationAction?: {
       times: number;
-      interval: number;
+      cooldown: number;
       action: Action;
     };
   }[];
@@ -106,20 +108,34 @@ export const isAssistantChatMessage = (message: ChatMessage): message is Assista
   return message.role === 'assistant';
 };
 
-export interface CacheMessage {
+export interface Timestampable {
+  createdTimestamp: number;
+}
+
+export interface CacheMessage extends Timestampable {
   id: string;
   authorId: string;
   channelId: string;
   guildId: string;
   content: string;
-  createdTimestamp: number;
 }
 
-type GuildAuthorMessageCache = Record<string, CacheMessage[]>;
-type GuildMessageCache = Record<string, GuildAuthorMessageCache>;
+type GuildAuthorCache<T> = Record<string, T[]>;
+type GuildCache<T> = Record<string, GuildAuthorCache<T>>;
 
-export interface MessagesStoreData extends Flushable {
-  cache: GuildMessageCache;
+export interface CacheStoreData<T extends Timestampable> extends Flushable {
+  cache: GuildCache<T>;
+}
+
+export interface ActionRegistryItem extends Timestampable {
+  policyId: string;
+  guildId: string;
+  authorId: string;
+  username: string;
+  action: {
+    name: string;
+    message?: string;
+  };
 }
 
 export interface Prompt {
@@ -144,7 +160,8 @@ declare module '@sapphire/pieces' {
     processWatch: Stopwatch;
     appConfig: DataBaseDriver<Config>;
     appStore: {
-      messagesStore: FlushableDataBaseDriver<MessagesStoreData>;
+      messagesStore: FlushableDataBaseDriver<CacheStoreData<CacheMessage>>;
+      actionRegistryStore: FlushableDataBaseDriver<CacheStoreData<ActionRegistryItem>>;
     };
     chat: {
       client?: OpenAI;

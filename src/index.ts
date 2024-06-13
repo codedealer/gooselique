@@ -15,12 +15,14 @@ import config from './store/config';
 import Logger from './logger';
 import pino from 'pino';
 import pretty from 'pino-pretty';
-import messagesStoreFactory from './store/messagesStore';
 import clientFactory from './chat/client';
 import promptStoreFactory from './chat/promptStore';
 import path from 'node:path';
 import * as fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { createFlushableStore } from './store/createFlushableStore';
+import { ActionRegistryItem, CacheMessage, CacheStoreData } from './types';
+import GuildCacheStore from './store/GuildCacheStore';
 
 // Set default behavior to bulk overwrite
 ApplicationCommandRegistries.setDefaultBehaviorWhenNotIdentical(RegisterBehavior.BulkOverwrite);
@@ -33,10 +35,6 @@ const main = async () => {
   container.processWatch = new Stopwatch(0);
 
   container.appConfig = await config();
-
-  container.appStore = {
-    messagesStore: await messagesStoreFactory(container.appConfig.data.persistence.messages),
-  };
 
   const prod = process.env.MODE === 'production';
   const logPath =
@@ -53,6 +51,32 @@ const main = async () => {
   }
 
   const logger = new Logger(prod ? container.appConfig.data.logs.level : LogLevel.Debug, target);
+
+  try {
+    container.appStore = {
+      messagesStore: await createFlushableStore<CacheStoreData<CacheMessage>>(
+        GuildCacheStore,
+        container.appConfig.data.persistence.messages,
+        {
+          cache: {},
+          lastFlush: Date.now(),
+          dirty: false,
+        },
+      ),
+      actionRegistryStore: await createFlushableStore<CacheStoreData<ActionRegistryItem>>(
+        GuildCacheStore,
+        container.appConfig.data.persistence.actionRegistry,
+        {
+          cache: {},
+          lastFlush: Date.now(),
+          dirty: false,
+        },
+      ),
+    };
+  } catch (e) {
+    logger.fatal(e, 'Failed to initialize app store');
+    return;
+  }
 
   container.chat = {};
   if (container.appConfig.data.chat.endpoint && process.env.LLM_TOKEN) {

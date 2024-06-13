@@ -17,6 +17,13 @@ const defaultConfig: Config = {
       // How long to keep messages for
       TTL: Time.Minute * 10,
     },
+    actionRegistry: {
+      driver: 'json',
+      path: './data/registry.json',
+      flushInterval: 0,
+      // 0 TTL means the data will never be removed
+      TTL: 0,
+    },
   },
   chat: {
     endpoint: null,
