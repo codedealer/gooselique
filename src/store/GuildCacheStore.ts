@@ -1,6 +1,22 @@
 import BaseStore from './BaseStore';
 import { CacheStoreData, Timestampable } from '../types';
 
+export const updateGuildCacheItem = <T extends Timestampable>(
+  cache: CacheStoreData<T>['cache'],
+  guildId: string,
+  authorId: string,
+  item: T,
+): void => {
+  if (!guildId || !authorId) {
+    throw new Error('Guild and author id are required');
+  }
+
+  if (!cache[guildId]) cache[guildId] = {};
+  if (!Array.isArray(cache[guildId][authorId])) cache[guildId][authorId] = [];
+
+  cache[guildId][authorId].push(item);
+};
+
 class GuildCacheStore<T extends Timestampable> extends BaseStore<CacheStoreData<T>> {
   constructor(db: any, TTL: number, timeout: number) {
     super(db, TTL, timeout);

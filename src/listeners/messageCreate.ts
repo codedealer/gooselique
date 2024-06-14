@@ -47,28 +47,15 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
             ? this.container.actions[cfg.action.name]
             : null;
         if (ActionClass) {
+          if (!cfg.action.params?.policyId) {
+            cfg.action.params = { ...cfg.action.params, ...{ policyId: cfg.id } };
+          }
           const action = new ActionClass(cfg.action.reason, cfg.action.params);
           if (!action.run) {
             throw new Error(`Action ${cfg.action.name} is missing a run method`);
           }
 
           const isFinal = await action.run(message);
-
-          await this.container.appStore.actionRegistryStore.update((data) => {
-            if (!data.cache[guildId]) data.cache[guildId] = {};
-            if (!Array.isArray(data.cache[guildId][authorId])) data.cache[guildId][authorId] = [];
-
-            data.cache[guildId][authorId].push({
-              policyId: cfg.id,
-              createdTimestamp,
-              guildId,
-              authorId,
-              username: author.username,
-              action: {
-                name: cfg.action.name,
-              },
-            });
-          });
 
           if (isFinal) return;
         } else {

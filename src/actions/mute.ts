@@ -3,6 +3,7 @@ import { Message } from 'discord.js';
 import { container } from '@sapphire/framework';
 import { DurationFormatter } from '@sapphire/time-utilities';
 import { deleteMessagesFromUser } from '../lib/discordOps';
+import { updateGuildCacheItem } from '../store/GuildCacheStore';
 
 class MuteAction implements Action {
   public name = 'mute';
@@ -48,8 +49,23 @@ class MuteAction implements Action {
         this.deleteMessagesInterval,
       );
     }
-    await message.channel.send(
-      `User ${message.author.username} has been muted for ${new DurationFormatter().format(this.duration)}\nReason: ${this.reason}`,
+
+    const msg = `User ${message.author.username} has been muted for ${new DurationFormatter().format(this.duration)}\nReason: ${this.reason}`;
+
+    await message.channel.send(msg);
+
+    await container.appStore.actionRegistryStore.update((data) =>
+      updateGuildCacheItem(data.cache, message.guildId!, message.author.id, {
+        policyId: this.params?.policyId.toString() ?? 'unknown',
+        guildId: message.guildId!,
+        authorId: message.author.id,
+        username: message.author.username,
+        action: {
+          name: this.name,
+          message: msg,
+        },
+        createdTimestamp: Date.now(),
+      }),
     );
 
     return true;

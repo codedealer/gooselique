@@ -1,6 +1,7 @@
 import { Action } from '../types';
 import { Message } from 'discord.js';
 import { container } from '@sapphire/framework';
+import { updateGuildCacheItem } from '../store/GuildCacheStore';
 
 class BanAction implements Action {
   public name = 'ban';
@@ -35,8 +36,22 @@ class BanAction implements Action {
       deleteMessageSeconds: this.deleteMessageSeconds,
     });
 
-    await message.channel.send(
-      `User ${message.author.username} has been banned\nReason: ${this.reason}`,
+    const msg = `User ${message.author.username} has been banned\nReason: ${this.reason}`;
+
+    await message.channel.send(msg);
+
+    await container.appStore.actionRegistryStore.update((data) =>
+      updateGuildCacheItem(data.cache, message.guildId!, message.author.id, {
+        policyId: this.params?.policyId.toString() ?? 'unknown',
+        guildId: message.guildId!,
+        authorId: message.author.id,
+        username: message.author.username,
+        action: {
+          name: this.name,
+          message: msg,
+        },
+        createdTimestamp: Date.now(),
+      }),
     );
 
     return true;
