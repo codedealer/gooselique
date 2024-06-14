@@ -2,6 +2,7 @@ import { Action } from '../types';
 import { Message } from 'discord.js';
 import { container } from '@sapphire/framework';
 import BaseAction from '../lib/BaseAction';
+import { recordTotalBanScore } from '../lib/recordTotalBanScore';
 
 class BanAction extends BaseAction {
   public name = 'ban';
@@ -33,7 +34,9 @@ class BanAction extends BaseAction {
       deleteMessageSeconds: this.deleteMessageSeconds,
     });
 
-    const msg = `User ${message.author.username} has been banned\nReason: ${this.reason}`;
+    await recordTotalBanScore(message.guild!.id);
+
+    const msg = `Tricky biscuit ${message.author.username} has been vanquished\nReason: ${this.reason}\n\nTotal number of tricky biscuits: ${container.appStore.bucketStore.data.bans![message.guild!.id]}`;
 
     await message.channel.send(msg);
 

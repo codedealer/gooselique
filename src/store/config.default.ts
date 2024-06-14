@@ -8,7 +8,6 @@ const defaultConfig: Config = {
     path: false,
   },
   persistence: {
-    path: '',
     messages: {
       driver: 'json',
       path: './data/messages.json',
@@ -23,6 +22,10 @@ const defaultConfig: Config = {
       flushInterval: 0,
       // 0 TTL means the data will never be removed
       TTL: 0,
+    },
+    // persistent storage for the bot
+    bucket: {
+      path: './data/persistent.json',
     },
   },
   chat: {

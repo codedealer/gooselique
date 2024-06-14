@@ -35,9 +35,11 @@ export interface Config {
     path: boolean | string;
   };
   persistence: {
-    path: string;
     messages: StoreConfig;
     actionRegistry: StoreConfig;
+    bucket: {
+      path: string;
+    };
   };
   chat: {
     endpoint: string | null;
@@ -154,6 +156,12 @@ export interface ContentPolicyEnforcer {
   execute(message: CacheMessage): Promise<boolean>;
 }
 
+export interface PersistentBucket {
+  bans?: {
+    [key: string]: number;
+  };
+}
+
 declare module '@sapphire/pieces' {
   interface Container {
     onlineWatch: Stopwatch;
@@ -162,6 +170,7 @@ declare module '@sapphire/pieces' {
     appStore: {
       messagesStore: FlushableDataBaseDriver<CacheStoreData<CacheMessage>>;
       actionRegistryStore: FlushableDataBaseDriver<CacheStoreData<ActionRegistryItem>>;
+      bucketStore: DataBaseDriver<PersistentBucket>;
     };
     chat: {
       client?: OpenAI;

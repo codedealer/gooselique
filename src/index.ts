@@ -23,6 +23,8 @@ import { pathToFileURL } from 'node:url';
 import { createFlushableStore } from './store/createFlushableStore';
 import { ActionRegistryItem, CacheMessage, CacheStoreData } from './types';
 import GuildCacheStore from './store/GuildCacheStore';
+import loadBucket from './store/bucket';
+import BaseStore from './store/BaseStore';
 
 // Set default behavior to bulk overwrite
 ApplicationCommandRegistries.setDefaultBehaviorWhenNotIdentical(RegisterBehavior.BulkOverwrite);
@@ -72,6 +74,7 @@ const main = async () => {
           dirty: false,
         },
       ),
+      bucketStore: await loadBucket(container.appConfig.data.persistence.bucket),
     };
   } catch (e) {
     logger.fatal(e, 'Failed to initialize app store');
@@ -152,7 +155,7 @@ const main = async () => {
     client.logger.fatal(error);
     // reset store timers
     for (const store of Object.values(container.appStore)) {
-      store.destroy();
+      if (store instanceof BaseStore) store.destroy();
     }
     await client.destroy();
     process.exit(1);
