@@ -1,18 +1,15 @@
 import { Action } from '../types';
 import { Message } from 'discord.js';
 import { container } from '@sapphire/framework';
-import { updateGuildCacheItem } from '../store/GuildCacheStore';
+import BaseAction from '../lib/BaseAction';
 
-class BanAction implements Action {
+class BanAction extends BaseAction {
   public name = 'ban';
-  public reason?: string;
-  public params?: Action['params'];
 
   private deleteMessageSeconds?: number;
 
   public constructor(reason?: string, params?: Action['params']) {
-    this.reason = reason ?? 'no reason.';
-    this.params = params;
+    super(reason, params);
 
     if (params?.deleteMessageSeconds && Number.isSafeInteger(params.deleteMessageSeconds)) {
       this.deleteMessageSeconds =
@@ -40,19 +37,7 @@ class BanAction implements Action {
 
     await message.channel.send(msg);
 
-    await container.appStore.actionRegistryStore.update((data) =>
-      updateGuildCacheItem(data.cache, message.guildId!, message.author.id, {
-        policyId: this.params?.policyId.toString() ?? 'unknown',
-        guildId: message.guildId!,
-        authorId: message.author.id,
-        username: message.author.username,
-        action: {
-          name: this.name,
-          message: msg,
-        },
-        createdTimestamp: Date.now(),
-      }),
-    );
+    await this.addToRegistry(message, msg);
 
     return true;
   }

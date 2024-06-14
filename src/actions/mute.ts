@@ -3,18 +3,15 @@ import { Message } from 'discord.js';
 import { container } from '@sapphire/framework';
 import { DurationFormatter } from '@sapphire/time-utilities';
 import { deleteMessagesFromUser } from '../lib/discordOps';
-import { updateGuildCacheItem } from '../store/GuildCacheStore';
+import BaseAction from '../lib/BaseAction';
 
-class MuteAction implements Action {
+class MuteAction extends BaseAction {
   public name = 'mute';
-  public reason?: string;
-  public params?: Action['params'];
   private duration: number;
   private deleteMessagesInterval?: number;
 
   public constructor(reason?: string, params?: Action['params']) {
-    this.reason = reason ?? 'no reason.';
-    this.params = params;
+    super(reason, params);
 
     if (params?.duration && Number.isSafeInteger(params.duration)) {
       this.duration = Number(params.duration) > 0 ? Number(params.duration) : 60000;
@@ -54,19 +51,7 @@ class MuteAction implements Action {
 
     await message.channel.send(msg);
 
-    await container.appStore.actionRegistryStore.update((data) =>
-      updateGuildCacheItem(data.cache, message.guildId!, message.author.id, {
-        policyId: this.params?.policyId.toString() ?? 'unknown',
-        guildId: message.guildId!,
-        authorId: message.author.id,
-        username: message.author.username,
-        action: {
-          name: this.name,
-          message: msg,
-        },
-        createdTimestamp: Date.now(),
-      }),
-    );
+    await this.addToRegistry(message, msg);
 
     return true;
   }
