@@ -100,3 +100,21 @@ export const handlePreconditionError = (
     ephemeral: context.ephemeral,
   });
 };
+
+export const replyOrEdit = (
+  interaction: ChatInputCommandInteraction<CacheType> | ContextMenuCommandInteraction<CacheType>,
+  content: string,
+  ephemeral: boolean,
+) => {
+  if (interaction.deferred || interaction.replied) {
+    return interaction.followUp({
+      content,
+      ephemeral,
+    });
+  }
+
+  return interaction.reply({
+    content,
+    ephemeral,
+  });
+};

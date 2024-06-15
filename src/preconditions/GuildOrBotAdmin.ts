@@ -1,5 +1,9 @@
-import { ChatInputCommand, Precondition } from '@sapphire/framework';
-import { ChatInputCommandInteraction, PermissionsBitField } from 'discord.js';
+import { ChatInputCommand, ContextMenuCommand, Precondition } from '@sapphire/framework';
+import {
+  ChatInputCommandInteraction,
+  ContextMenuCommandInteraction,
+  PermissionsBitField,
+} from 'discord.js';
 
 export class GuildOrBotAdmin extends Precondition {
   public override chatInputRun(
@@ -7,6 +11,21 @@ export class GuildOrBotAdmin extends Precondition {
     _command: ChatInputCommand,
     context: Precondition.Context,
   ): Precondition.Result {
+    return this.check(interaction, context);
+  }
+
+  public override contextMenuRun(
+    interaction: ContextMenuCommandInteraction,
+    _command: ContextMenuCommand,
+    context: Precondition.Context,
+  ): Precondition.Result {
+    return this.check(interaction, context);
+  }
+
+  private check(
+    interaction: ChatInputCommandInteraction | ContextMenuCommandInteraction,
+    context: Precondition.Context,
+  ) {
     const botAdmins = this.container.appConfig.data.botAdmins;
     const isGuildAdmin = interaction.memberPermissions?.has(
       PermissionsBitField.Flags.Administrator,
