@@ -43,6 +43,23 @@ export const deleteMessagesFromUser = async (guildId: string, userId: string, in
   }
 };
 
+export const handleCommandError = (
+  interaction: ChatInputCommandInteraction<CacheType> | ContextMenuCommandInteraction<CacheType>,
+) => {
+  if (interaction.deferred || interaction.replied) {
+    return interaction.editReply({
+      content: 'An error occurred while processing this command',
+      allowedMentions: { users: [interaction.user.id], roles: [] },
+    });
+  }
+
+  return interaction.reply({
+    content: 'An error occurred while processing this command',
+    allowedMentions: { users: [interaction.user.id], roles: [] },
+    ephemeral: true,
+  });
+};
+
 export const handleCommandDenial = (
   message: string,
   interaction: ChatInputCommandInteraction<CacheType> | ContextMenuCommandInteraction<CacheType>,
