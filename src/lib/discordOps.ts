@@ -1,6 +1,12 @@
 import { container } from '@sapphire/framework';
-import { Channel } from 'discord.js';
+import {
+  CacheType,
+  Channel,
+  ChatInputCommandInteraction,
+  ContextMenuCommandInteraction,
+} from 'discord.js';
 import { isTextChannel } from '@sapphire/discord.js-utilities';
+import { PreconditionErrorContext } from '../types';
 
 export const deleteMessagesFromUser = async (guildId: string, userId: string, interval: number) => {
   const cache = container.appStore.messagesStore.data.cache;
@@ -35,4 +41,45 @@ export const deleteMessagesFromUser = async (guildId: string, userId: string, in
       if ((e as { code: number }).code !== 10008) throw e;
     }
   }
+};
+
+export const handleCommandDenial = (
+  message: string,
+  interaction: ChatInputCommandInteraction<CacheType> | ContextMenuCommandInteraction<CacheType>,
+) => {
+  if (interaction.deferred || interaction.replied) {
+    return interaction.editReply({
+      content: message,
+      allowedMentions: { users: [interaction.user.id], roles: [] },
+    });
+  }
+
+  return interaction.reply({
+    content: message,
+    allowedMentions: { users: [interaction.user.id], roles: [] },
+    ephemeral: true,
+  });
+};
+
+export const handlePreconditionError = (
+  message: string,
+  context: PreconditionErrorContext,
+  interaction: ChatInputCommandInteraction<CacheType> | ContextMenuCommandInteraction<CacheType>,
+) => {
+  if (context.silent) return;
+
+  if (interaction.deferred || interaction.replied) {
+    return interaction.editReply({
+      content: message,
+      allowedMentions: { users: [interaction.user.id], roles: [] },
+    });
+  }
+
+  const reply = context.alert ? `${message}\nThis incident will be reported` : message;
+
+  return interaction.reply({
+    content: reply,
+    allowedMentions: { users: [interaction.user.id], roles: [] },
+    ephemeral: context.ephemeral,
+  });
 };

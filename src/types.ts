@@ -1,7 +1,8 @@
 import { Stopwatch } from '@sapphire/stopwatch';
-import { BucketScope, LogLevel } from '@sapphire/framework';
+import { BucketScope, LogLevel, PreconditionContext } from '@sapphire/framework';
 import OpenAI from 'openai';
 import { Message } from 'discord.js';
+import { isObject } from '@sapphire/utilities';
 
 export interface Flushable {
   lastFlush: number;
@@ -162,6 +163,19 @@ export interface PersistentBucket {
   };
 }
 
+export interface PreconditionErrorContext extends PreconditionContext {
+  type: 'PreconditionErrorContext';
+  silent: boolean;
+  ephemeral: boolean;
+  alert: boolean;
+}
+
+export const isPreconditionErrorContext = (
+  context: unknown,
+): context is PreconditionErrorContext => {
+  return isObject(context) && 'type' in context && context.type === 'PreconditionErrorContext';
+};
+
 declare module '@sapphire/pieces' {
   interface Container {
     onlineWatch: Stopwatch;
@@ -177,5 +191,11 @@ declare module '@sapphire/pieces' {
       prompt?: DataBaseDriver<Prompt>;
     };
     actions: Record<string, new (reason?: string, params?: Action['params']) => Action>;
+  }
+}
+
+declare module '@sapphire/framework' {
+  interface Preconditions {
+    GuildOrBotAdmin: never;
   }
 }
