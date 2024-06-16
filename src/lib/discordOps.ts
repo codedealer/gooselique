@@ -4,6 +4,7 @@ import {
   Channel,
   ChatInputCommandInteraction,
   ContextMenuCommandInteraction,
+  TextChannel,
 } from 'discord.js';
 import { isTextChannel } from '@sapphire/discord.js-utilities';
 import { PreconditionErrorContext } from '../types';
@@ -46,36 +47,16 @@ export const deleteMessagesFromUser = async (guildId: string, userId: string, in
 export const handleCommandError = (
   interaction: ChatInputCommandInteraction<CacheType> | ContextMenuCommandInteraction<CacheType>,
 ) => {
-  if (interaction.deferred || interaction.replied) {
-    return interaction.editReply({
-      content: 'An error occurred while processing this command',
-      allowedMentions: { users: [interaction.user.id], roles: [] },
-    });
-  }
+  void alert(`An error occurred while processing the command: ${interaction.commandName}`);
 
-  return interaction.reply({
-    content: 'An error occurred while processing this command',
-    allowedMentions: { users: [interaction.user.id], roles: [] },
-    ephemeral: true,
-  });
+  return replyOrEdit(interaction, 'An error occurred while processing this command', true);
 };
 
 export const handleCommandDenial = (
   message: string,
   interaction: ChatInputCommandInteraction<CacheType> | ContextMenuCommandInteraction<CacheType>,
 ) => {
-  if (interaction.deferred || interaction.replied) {
-    return interaction.editReply({
-      content: message,
-      allowedMentions: { users: [interaction.user.id], roles: [] },
-    });
-  }
-
-  return interaction.reply({
-    content: message,
-    allowedMentions: { users: [interaction.user.id], roles: [] },
-    ephemeral: true,
-  });
+  return replyOrEdit(interaction, message, true);
 };
 
 export const handlePreconditionError = (
@@ -85,20 +66,15 @@ export const handlePreconditionError = (
 ) => {
   if (context.silent) return;
 
-  if (interaction.deferred || interaction.replied) {
-    return interaction.editReply({
-      content: message,
-      allowedMentions: { users: [interaction.user.id], roles: [] },
-    });
-  }
-
   const reply = context.alert ? `${message}\nThis incident will be reported` : message;
 
-  return interaction.reply({
-    content: reply,
-    allowedMentions: { users: [interaction.user.id], roles: [] },
-    ephemeral: context.ephemeral,
-  });
+  if (context.alert) {
+    void alert(
+      `Command execution denied:\nCommand: ${interaction.commandName}\nReason: ${message}\nUser: ${interaction.user.username} [${interaction.user.id}]`,
+    );
+  }
+
+  return replyOrEdit(interaction, reply, context.ephemeral);
 };
 
 export const replyOrEdit = (
@@ -117,4 +93,37 @@ export const replyOrEdit = (
     content,
     ephemeral,
   });
+};
+
+export const alert = async (message: string) => {
+  const alertChannel = container.appConfig.data.alertChannel;
+  if (!alertChannel) return;
+
+  const { channelId, guildId } = alertChannel;
+  if (!channelId || !guildId) {
+    container.logger.error('Invalid alert channel configuration');
+    return;
+  }
+
+  const channel = container.client.channels.cache.get(channelId);
+  if (!channel) {
+    container.logger.error('Alert channel not found');
+    return;
+  }
+  if (!channel.isTextBased) {
+    container.logger.error('Alert channel is not text based');
+    return;
+  }
+
+  const textChannel = channel as TextChannel;
+  if (textChannel.guildId !== guildId) {
+    container.logger.error('Alert channel is not in the correct guild');
+    return;
+  }
+
+  try {
+    await textChannel.send(message);
+  } catch (e) {
+    container.logger.error(e, `Failed to send alert message to ${textChannel.name}`);
+  }
 };

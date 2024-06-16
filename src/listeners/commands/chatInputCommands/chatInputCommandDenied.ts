@@ -8,6 +8,10 @@ export class UserEvent extends Listener<typeof Events.ChatInputCommandDenied> {
     { context, message: content }: UserError,
     { interaction }: ChatInputCommandDeniedPayload,
   ) {
+    this.container.logger.warn(
+      `Command denied: ${interaction.commandName} was executed by ${interaction.user.username}[${interaction.user.id}] in ${interaction.guildId}`,
+    );
+
     if (isPreconditionErrorContext(context)) {
       return handlePreconditionError(content, context, interaction);
     }

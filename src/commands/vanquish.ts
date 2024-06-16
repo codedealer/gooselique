@@ -104,7 +104,7 @@ export class VanquishCommand extends Command {
     }
     if (!member.bannable) {
       this.container.logger.warn(
-        `Member ${member.user.username}[${member.user.id}] in ${member.guild.name}[${member.guild.id}] cannot be banned`,
+        `User ${interaction.user.username} [${interaction.user.id}] tried executing vanquish command\nMember ${member.user.username}[${member.user.id}] in ${member.guild.name}[${member.guild.id}] cannot be banned`,
       );
 
       return replyOrEdit(interaction, 'Member cannot be banned', true);

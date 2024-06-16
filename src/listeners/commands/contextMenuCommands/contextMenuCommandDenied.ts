@@ -8,6 +8,10 @@ export class UserEvent extends Listener<typeof Events.ContextMenuCommandDenied> 
     { context, message: content }: UserError,
     { interaction }: ContextMenuCommandDeniedPayload,
   ) {
+    this.container.logger.warn(
+      `Command denied: ${interaction.commandName} was executed by ${interaction.user.username}[${interaction.user.id}] in ${interaction.guildId}`,
+    );
+
     if (isPreconditionErrorContext(context)) {
       return handlePreconditionError(content, context, interaction);
     }
