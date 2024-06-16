@@ -96,7 +96,9 @@ export class VanquishCommand extends Command {
     let member: GuildMember;
 
     try {
-      await interaction.deferReply();
+      await interaction.deferReply({
+        ephemeral: true,
+      });
 
       member = await interaction.guild!.members.fetch(interaction.targetId);
 
