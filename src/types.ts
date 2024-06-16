@@ -58,6 +58,7 @@ export interface Config {
   } | null;
   commands: {
     [key: string]: {
+      enabled?: boolean;
       guilds?: string[];
       cooldownDelay?: number;
       cooldownLimit?: number;

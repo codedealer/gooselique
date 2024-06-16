@@ -5,6 +5,7 @@ export const generateCommandOptions = (name: string): Command.Options => {
   if (!commandConfig) return {};
 
   return {
+    enabled: commandConfig?.enabled !== false,
     cooldownDelay: commandConfig.cooldownDelay,
     cooldownLimit: commandConfig.cooldownLimit,
     cooldownFilteredUsers: commandConfig.cooldownFilteredUsers,
