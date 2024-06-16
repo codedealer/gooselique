@@ -57,88 +57,57 @@ export class VanquishCommand extends Command {
 
     let member: GuildMember;
     if (!('bannable' in memberOrRawData)) {
-      try {
-        const userOption = interaction.options.getUser('user');
-        if (!userOption) {
-          return interaction.reply({
-            content: 'Invalid user',
-            ephemeral: true,
-          });
-        }
-
-        await interaction.deferReply();
-
-        member = await interaction.guild!.members.fetch(userOption.id);
-      } catch (e) {
-        this.container.logger.error(e, 'Failed to fetch member when handling vanquish command');
-
-        return interaction.followUp({
-          content: 'Failed to fetch member',
+      const userOption = interaction.options.getUser('user');
+      if (!userOption) {
+        return interaction.reply({
+          content: 'Invalid user',
           ephemeral: true,
         });
       }
+
+      await interaction.deferReply();
+
+      member = await interaction.guild!.members.fetch(userOption.id);
     } else {
       member = memberOrRawData;
     }
 
-    try {
-      await this.vanquish(member);
-    } catch (e) {
-      this.container.logger.error(e, 'Failed to vanquish member');
-
-      return replyOrEdit(interaction, 'Failed to vanquish member', true);
-    }
-
-    return this.replyVanquished(interaction, member.user.username);
+    return this.vanquish(interaction, member);
   }
 
   public override async contextMenuRun(interaction: Command.ContextMenuCommandInteraction) {
     let member: GuildMember;
 
-    try {
-      await interaction.deferReply({
-        ephemeral: true,
-      });
+    await interaction.deferReply({
+      ephemeral: true,
+    });
 
-      member = await interaction.guild!.members.fetch(interaction.targetId);
+    member = await interaction.guild!.members.fetch(interaction.targetId);
 
-      if (!member) {
-        return interaction.editReply({
-          content: 'Member not found',
-        });
-      }
-    } catch (e) {
-      this.container.logger.error(e, 'Failed to fetch member when handling vanquish command');
-
+    if (!member) {
       return interaction.editReply({
-        content: 'Failed to fetch member',
+        content: 'Member not found',
       });
     }
 
-    try {
-      await this.vanquish(member);
-    } catch (e) {
-      if ((e as Error).message === 'VANQUISH_MEMBER_NOT_BANNABLE') {
-        this.container.logger.warn(
-          `Member ${member.user.username}[${member.user.id}] in ${member.guild.name}[${member.guild.id}] cannot be banned`,
-        );
-
-        return replyOrEdit(interaction, 'Member cannot be banned', true);
-      }
-      this.container.logger.error(e, 'Failed to vanquish member');
-
-      return replyOrEdit(interaction, 'Failed to vanquish member', true);
-    }
-
-    return this.replyVanquished(interaction, member.user.username);
+    return this.vanquish(interaction, member);
   }
 
-  private async vanquish(member: GuildMember) {
+  private async vanquish(
+    interaction: Command.ChatInputCommandInteraction | Command.ContextMenuCommandInteraction,
+    member: GuildMember,
+  ) {
     if (!member) {
-      return;
+      this.container.logger.error('Trying to vanquish a non-existent member');
+
+      return replyOrEdit(interaction, 'Member cannot be banned', true);
     }
     if (!member.bannable) {
-      throw new Error('VANQUISH_MEMBER_NOT_BANNABLE');
+      this.container.logger.warn(
+        `Member ${member.user.username}[${member.user.id}] in ${member.guild.name}[${member.guild.id}] cannot be banned`,
+      );
+
+      return replyOrEdit(interaction, 'Member cannot be banned', true);
     }
 
     this.container.logger.debug(
@@ -151,13 +120,8 @@ export class VanquishCommand extends Command {
     });
 
     await recordTotalBanScore(member.guild.id);
-  }
 
-  private async replyVanquished(
-    interaction: Command.ChatInputCommandInteraction | Command.ContextMenuCommandInteraction,
-    name: string,
-  ) {
-    const content = `Tricky biscuit ${name} has been vanquished\n\nTotal number of tricky biscuits: ${this.container.appStore.bucketStore.data.bans![interaction.guild!.id]}`;
+    const content = `Tricky biscuit ${member.user.username} has been vanquished\n\nTotal number of tricky biscuits: ${this.container.appStore.bucketStore.data.bans![interaction.guild!.id]}`;
 
     return replyOrEdit(interaction, content, false);
   }
