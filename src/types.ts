@@ -83,6 +83,12 @@ export interface Config {
       action: Action;
     };
   }[];
+  hooks: {
+    [key: string]: {
+      enabled: boolean;
+      guilds?: string[];
+    };
+  };
 }
 
 export interface ChatMessage {

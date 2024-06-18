@@ -80,6 +80,7 @@ const defaultConfig: Config = {
       },
     },
   ],
+  hooks: {},
 };
 
 export default defaultConfig;

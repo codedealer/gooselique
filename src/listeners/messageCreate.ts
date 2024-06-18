@@ -11,7 +11,10 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
   constructor(context: Listener.LoaderContext) {
     super(context);
 
-    this.hooks = [new ImgurHook()];
+    this.hooks = [];
+    if (this.container.appConfig.data.hooks['imgur']?.enabled) {
+      this.hooks.push(new ImgurHook());
+    }
   }
   public override async run(message: Message) {
     if (message.author.bot || !message.guildId) return;
@@ -80,6 +83,11 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
 
     for (const hook of this.hooks) {
       try {
+        const config = this.container.appConfig.data.hooks[hook.name];
+
+        if (config && Array.isArray(config.guilds) && !config.guilds.includes(message.guildId))
+          continue;
+
         await hook.run(message);
       } catch (e) {
         this.container.logger.error(e, `Failed to run hook ${hook.name} in ${message.guild!.name}`);
