@@ -11,9 +11,17 @@ export class UptimeCommand extends Command {
   }
 
   public override registerApplicationCommands(registry: Command.Registry) {
-    registry.registerChatInputCommand((builder) => {
-      return builder.setName('uptime').setDescription("Check the bot's uptime");
-    });
+    const commandConfig = this.container.appConfig.data.commands;
+    const guildIds = this.name in commandConfig ? commandConfig[this.name].guilds : undefined;
+
+    registry.registerChatInputCommand(
+      (builder) => {
+        return builder.setName('uptime').setDescription("Check the bot's uptime");
+      },
+      {
+        guildIds,
+      },
+    );
   }
 
   public override chatInputRun(interaction: Command.ChatInputCommandInteraction) {
