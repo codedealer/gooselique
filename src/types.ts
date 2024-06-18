@@ -168,6 +168,9 @@ export interface PersistentBucket {
   bans?: {
     [key: string]: number;
   };
+  pet?: {
+    default: string[];
+  };
 }
 
 export interface PreconditionErrorContext extends PreconditionContext {
