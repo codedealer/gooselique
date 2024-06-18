@@ -1,6 +1,7 @@
 import { Events, Listener } from '@sapphire/framework';
 import { Message } from 'discord.js';
 import { detect } from '../lib/moderator';
+import { updateGuildCacheItem } from '../store/GuildCacheStore';
 
 export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
   public override async run(message: Message) {
@@ -12,10 +13,7 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
 
     try {
       await this.container.appStore.messagesStore.update((data) => {
-        if (!data.cache[guildId]) data.cache[guildId] = {};
-        if (!Array.isArray(data.cache[guildId][authorId])) data.cache[guildId][authorId] = [];
-
-        data.cache[guildId][authorId].push({
+        updateGuildCacheItem(data.cache, guildId, authorId, {
           id,
           createdTimestamp,
           content,
@@ -60,12 +58,14 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
           if (isFinal) return;
         } else {
           this.container.logger.warn(`Action ${cfg.action.name} not found`);
+          void alert(`Action ${cfg.action.name} not found`);
         }
       } catch (e) {
         this.container.logger.error(
           e,
           `Failed to run action ${cfg.action.name} for message: ${content}`,
         );
+        void alert(`Failed to run action ${cfg.action.name} for message: ${content}`);
       }
     }
   }
