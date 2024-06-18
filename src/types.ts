@@ -177,6 +177,11 @@ export const isPreconditionErrorContext = (
   return isObject(context) && 'type' in context && context.type === 'PreconditionErrorContext';
 };
 
+export interface MessageHook {
+  name: string;
+  run(message: Message): Promise<void>;
+}
+
 declare module '@sapphire/pieces' {
   interface Container {
     onlineWatch: Stopwatch;

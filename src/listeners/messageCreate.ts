@@ -2,8 +2,17 @@ import { Events, Listener } from '@sapphire/framework';
 import { Message } from 'discord.js';
 import { detect } from '../lib/moderator';
 import { updateGuildCacheItem } from '../store/GuildCacheStore';
+import { MessageHook } from '../types';
+import ImgurHook from '../hooks/imgur';
+import { alert } from '../lib/discordOps';
 
 export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
+  protected hooks: MessageHook[] = [];
+  constructor(context: Listener.LoaderContext) {
+    super(context);
+
+    this.hooks = [new ImgurHook()];
+  }
   public override async run(message: Message) {
     if (message.author.bot || !message.guildId) return;
     const { channelId, guildId, cleanContent: content, id, createdTimestamp, author } = message;
@@ -66,6 +75,15 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
           `Failed to run action ${cfg.action.name} for message: ${content}`,
         );
         void alert(`Failed to run action ${cfg.action.name} for message: ${content}`);
+      }
+    }
+
+    for (const hook of this.hooks) {
+      try {
+        await hook.run(message);
+      } catch (e) {
+        this.container.logger.error(e, `Failed to run hook ${hook.name} in ${message.guild!.name}`);
+        void alert(`Failed to run hook ${hook.name}`);
       }
     }
   }
