@@ -82,7 +82,7 @@ const main = async () => {
   }
 
   container.chat = {};
-  if (container.appConfig.data.chat.endpoint && process.env.LLM_TOKEN) {
+  if (process.env.LLM_TOKEN) {
     container.chat.client = clientFactory(container.appConfig.data.chat, process.env.LLM_TOKEN);
 
     if (!container.appConfig.data.chat.promptFile) {

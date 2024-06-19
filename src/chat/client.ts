@@ -4,8 +4,8 @@ import { MessageLimits } from '@sapphire/discord.js-utilities';
 import { trimSentence } from '../lib/utils';
 
 const clientFactory = (config: Config['chat'], token: string) => {
-  if (!config.endpoint) {
-    throw new Error('No chat endpoint provided');
+  if (!token) {
+    throw new Error('No API token provided');
   }
 
   const client = new OpenAI({
