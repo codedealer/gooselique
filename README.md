@@ -1,6 +1,6 @@
 # Helpful bot built to crack down on automated behavior
 
-A Discord bot using the [sapphire framework][sapphire] written in TypeScript.
+A Discord bot using the [sapphire framework](https://github.com/sapphiredev/framework) written in TypeScript.
 
 While it has a "character", supporting /pet and /vanquish its main functionality is pretty universal focusing on auto moderation controlled by a simple config.
 
