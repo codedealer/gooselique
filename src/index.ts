@@ -38,7 +38,7 @@ const main = async () => {
 
   container.appConfig = await config();
 
-  const prod = process.env.MODE === 'production';
+  const prod = process.env.DEBUG !== 'true';
   const logPath =
     typeof container.appConfig.data.logs.path === 'string'
       ? container.appConfig.data.logs.path
