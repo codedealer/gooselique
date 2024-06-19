@@ -5,12 +5,12 @@ class ImgurHook implements MessageHook {
   private readonly imgurVideoRegex = /https:\/\/(i\.)?imgur\.com\S+\.mp4\/?/gi;
   public readonly name = 'Imgur link fixer';
 
-  public async run(message: Message): Promise<void> {
+  public async run(message: Message): Promise<boolean> {
     const originalUrls = this.findImgurVideoUrls(message.content);
 
     const fixedUrls = originalUrls.map(ImgurHook.replacer);
 
-    if (fixedUrls.length === 0) return;
+    if (fixedUrls.length === 0) return false;
 
     let content = message.content;
     for (let i = 0; i < originalUrls.length; i++) {
@@ -21,6 +21,8 @@ class ImgurHook implements MessageHook {
     await message.channel.send(
       `Imgur links were fixed. Original message by ${message.author.displayName}:\n${content}`,
     );
+
+    return true;
   }
 
   private findImgurVideoUrls(content: string): URL[] {

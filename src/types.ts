@@ -188,7 +188,7 @@ export const isPreconditionErrorContext = (
 
 export interface MessageHook {
   name: string;
-  run(message: Message): Promise<void>;
+  run(message: Message): Promise<boolean>;
 }
 
 declare module '@sapphire/pieces' {

@@ -88,7 +88,7 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
         if (config && Array.isArray(config.guilds) && !config.guilds.includes(message.guildId))
           continue;
 
-        await hook.run(message);
+        if (await hook.run(message)) break;
       } catch (e) {
         this.container.logger.error(e, `Failed to run hook ${hook.name} in ${message.guild!.name}`);
         void alert(`Failed to run hook ${hook.name}`);
