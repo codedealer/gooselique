@@ -8,6 +8,7 @@ class BanAction extends BaseAction {
   public name = 'ban';
 
   private deleteMessageSeconds?: number;
+  private readonly banCooldown = 120_000;
 
   public constructor(reason?: string, params?: Action['params']) {
     super(reason, params);
@@ -19,6 +20,28 @@ class BanAction extends BaseAction {
   }
 
   public async run(message: Message) {
+    // Do not ban the user that was already banned within banCooldown
+    const actionsAgainstMember =
+      container.appStore.actionRegistryStore.data.cache[message.guildId!]?.[message.author.id];
+    if (Array.isArray(actionsAgainstMember && actionsAgainstMember.length > 0)) {
+      const now = Date.now();
+      for (let i = actionsAgainstMember.length - 1; i >= 0; i--) {
+        const action = actionsAgainstMember[i];
+        // The array is sorted in ascending order, so we can break early
+        if (now - action.createdTimestamp > this.banCooldown) {
+          break;
+        }
+
+        if (action.action.name === this.name) {
+          container.logger.info(
+            `User ${message.author.username}[${message.author.id}] in ${message.guild?.name}[${message.guild?.id}] has been banned within the cooldown period. No action taken this time.`,
+          );
+
+          return true;
+        }
+      }
+    }
+
     container.logger.debug(
       `Banning user ${message.author.username}[${message.author.id}] in ${message.guild?.name}[${message.guild?.id}] | ${(message.channel as TextChannel).name}\nReason: ${this.reason}`,
     );
