@@ -36,7 +36,7 @@ jobs:
         run: |
           echo "${{ secrets.DEPLOY_KEY }}" > deploy_key
           chmod 600 deploy_key
-          ssh -i deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_SERVER }} "rm -rf ${DEPLOY_PATH}/dist"
+          ssh -o StrictHostKeyChecking=no -i deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_SERVER }} "rm -rf ${DEPLOY_PATH}/dist"
           rm deploy_key
 
       - name: Deploy to server
@@ -48,7 +48,7 @@ jobs:
         run: |
           echo "${{ secrets.DEPLOY_KEY }}" > deploy_key
           chmod 600 deploy_key
-          scp -i deploy_key -r dist/* ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_SERVER }}:${{ secrets.DEPLOY_PATH }}/dist
+          scp -o StrictHostKeyChecking=no -i deploy_key -r dist/* ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_SERVER }}:${{ secrets.DEPLOY_PATH }}/dist
           rm deploy_key
 
       - name: Restart PM2 process
@@ -60,5 +60,5 @@ jobs:
         run: |
           echo "${{ secrets.DEPLOY_KEY }}" > deploy_key
           chmod 600 deploy_key
-          ssh -i deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_SERVER }} "pm2 restart ${DEPLOY_APP_NAME}"
+          ssh -o StrictHostKeyChecking=no -i deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_SERVER }} "pm2 restart ${DEPLOY_APP_NAME}"
           rm deploy_key
