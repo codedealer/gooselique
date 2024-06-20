@@ -51,14 +51,14 @@ jobs:
           scp -o StrictHostKeyChecking=no -i deploy_key -r dist/* ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_SERVER }}:${{ secrets.DEPLOY_PATH }}/dist
           rm deploy_key
 
-      - name: Restart PM2 process
+      - name: Record deployment
         env:
           DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-          DEPLOY_APP_NAME: ${{ secrets.DEPLOY_APP_NAME }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           echo "${{ secrets.DEPLOY_KEY }}" > deploy_key
           chmod 600 deploy_key
-          ssh -o StrictHostKeyChecking=no -i deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_SERVER }} "pm2 restart ${DEPLOY_APP_NAME}"
+          ssh -o StrictHostKeyChecking=no -i deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_SERVER }} "date > ${DEPLOY_PATH}/data/_deploy.log"
           rm deploy_key
