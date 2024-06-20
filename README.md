@@ -77,6 +77,12 @@ An array of moderation rules. The rules are evaluated from top to bottom, so put
 - `contentFilter`: if 'content_filter' is the policy, this is the regex to check the messages against.
 - `action`: The action to take when the rule is violated. The bot is shipped with `ban` and `mute` actions. More can be added to `src/actions` folder, be sure to inherit from `BaseAction`.
 
+## actions
+
+An object for specific options for actions. The key is the action name and the value is an object with the following properties:
+
+- `reporting`: instead of sending a message to the channel that triggered the action the bot can send it to a dedicated channel, specified as `{ guildId: channelId }`. If no reporting channel exist for the guild the message will be sent to the channel that triggered the action.
+
 ## hooks
 
 An object where the key is a hook name and the value is an options object.
