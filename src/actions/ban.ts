@@ -74,7 +74,11 @@ class BanAction extends BaseAction {
 
     const msg = `Tricky biscuit ${message.author.username} has been vanquished\nReason: ${this.reason}\n\nTotal number of tricky biscuits: ${container.appStore.bucketStore.data.bans![message.guild!.id]}`;
 
-    await message.channel.send(msg);
+    try {
+      await this.report(message, msg);
+    } catch (e) {
+      container.logger.error(e, 'Failed to report ban');
+    }
 
     await this.addToRegistry(message, msg);
 

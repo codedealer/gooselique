@@ -62,7 +62,11 @@ class MuteAction extends BaseAction {
 
     const msg = `User ${message.author.username} has been muted for ${new DurationFormatter().format(this.duration)}\nReason: ${this.reason}`;
 
-    await message.channel.send(msg);
+    try {
+      await this.report(message, msg);
+    } catch (e) {
+      container.logger.error(e, 'Failed to report mute action');
+    }
 
     await this.addToRegistry(message, msg);
 

@@ -83,6 +83,11 @@ export interface Config {
       action: Action;
     };
   }[];
+  actions?: {
+    [key: string]: {
+      reporting: { [key: string]: string };
+    };
+  };
   hooks: {
     [key: string]: {
       enabled: boolean;

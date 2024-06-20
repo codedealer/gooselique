@@ -10,6 +10,15 @@ import {
 import { isTextChannel } from '@sapphire/discord.js-utilities';
 import { PreconditionErrorContext } from '../types';
 
+export const getChannel = async (channelId: string) => {
+  let channel: Channel | null | undefined = container.client.channels.cache.get(channelId);
+  if (!channel) {
+    channel = await container.client.channels.fetch(channelId);
+  }
+
+  return channel;
+};
+
 export const deleteMessagesFromUser = async (guildId: string, userId: string, interval: number) => {
   const cache = container.appStore.messagesStore.data.cache;
   if (!cache[guildId] || !Array.isArray(cache[guildId][userId])) return;
@@ -31,10 +40,7 @@ export const deleteMessagesFromUser = async (guildId: string, userId: string, in
     });
 
   for (const [channelId, messageIds] of messages.entries()) {
-    let channel: Channel | null | undefined = container.client.channels.cache.get(channelId);
-    if (!channel) {
-      channel = await container.client.channels.fetch(channelId);
-    }
+    let channel: Channel | null | undefined = await getChannel(channelId);
     if (!isTextChannel(channel)) continue;
 
     try {
@@ -115,7 +121,7 @@ export const alert = async (message: string) => {
     return;
   }
 
-  const channel = container.client.channels.cache.get(channelId);
+  const channel = await getChannel(channelId);
   if (!channel) {
     container.logger.error('Alert channel not found');
     return;
