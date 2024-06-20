@@ -1,5 +1,5 @@
 import { Action } from '../types';
-import { Message } from 'discord.js';
+import { DiscordAPIError, Message, TextChannel } from 'discord.js';
 import { container } from '@sapphire/framework';
 import { DurationFormatter } from '@sapphire/time-utilities';
 import { deleteMessagesFromUser } from '../lib/discordOps';
@@ -29,7 +29,7 @@ class MuteAction extends BaseAction {
 
   public async run(message: Message) {
     container.logger.debug(
-      `Muting user ${message.author.username}[${message.author.id}] in ${message.guild?.name}[${message.guild?.id}]\nReason: ${this.reason}\nDuration: ${new DurationFormatter().format(this.duration)}`,
+      `Muting user ${message.author.username}[${message.author.id}] in ${message.guild?.name}[${message.guild?.id}] | ${(message.channel as TextChannel).name}\nReason: ${this.reason}\nDuration: ${new DurationFormatter().format(this.duration)}`,
     );
 
     if (!message.member?.moderatable) {
@@ -38,7 +38,20 @@ class MuteAction extends BaseAction {
       );
     }
 
-    await message.member!.timeout(this.duration, this.reason);
+    try {
+      await message.member!.timeout(this.duration, this.reason);
+    } catch (e) {
+      const discordError = e as DiscordAPIError;
+      if (discordError.code === 10007) {
+        container.logger.warn(
+          `Trying to mute non-existent user ${message.member!.user.username}[${message.member!.user.id}] in ${message.member!.guild.name}[${message.member!.guild.id}]`,
+        );
+
+        return true;
+      }
+
+      throw e;
+    }
     if (this.deleteMessagesInterval) {
       await deleteMessagesFromUser(
         message.guildId!,

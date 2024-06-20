@@ -4,6 +4,7 @@ import {
   Channel,
   ChatInputCommandInteraction,
   ContextMenuCommandInteraction,
+  DiscordAPIError,
   TextChannel,
 } from 'discord.js';
 import { isTextChannel } from '@sapphire/discord.js-utilities';
@@ -39,7 +40,16 @@ export const deleteMessagesFromUser = async (guildId: string, userId: string, in
     try {
       await channel.bulkDelete(messageIds);
     } catch (e) {
-      if ((e as { code: number }).code !== 10008) throw e;
+      const discordError = e as DiscordAPIError;
+      if (discordError.code === 10008) {
+        container.logger.warn(
+          `Trying to delete a non-existent message in ${channel.guild.name}[${channel.guild.id}] | ${channel.name}`,
+        );
+
+        continue;
+      }
+
+      throw e;
     }
   }
 };

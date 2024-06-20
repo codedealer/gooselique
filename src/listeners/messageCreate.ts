@@ -1,5 +1,5 @@
 import { Events, Listener } from '@sapphire/framework';
-import { Message } from 'discord.js';
+import { Message, TextChannel } from 'discord.js';
 import { detect } from '../lib/moderator';
 import { updateGuildCacheItem } from '../store/GuildCacheStore';
 import { MessageHook } from '../types';
@@ -47,7 +47,7 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
       if (!detected) continue;
 
       this.container.logger.info(
-        `Detected message for moderation from ${author.username}: ${content}`,
+        `Detected message for moderation from ${author.username} in ${message.guild!.name} | ${(message.channel as TextChannel).name}: ${content}`,
       );
 
       try {
@@ -75,9 +75,11 @@ export class MessageCreateEvent extends Listener<typeof Events.MessageCreate> {
       } catch (e) {
         this.container.logger.error(
           e,
-          `Failed to run action ${cfg.action.name} for message: ${content}`,
+          `[${cfg.id}] Failed to run action ${cfg.action.name} on ${author.username} in ${message.guild!.name} | ${(message.channel as TextChannel).name} for message: ${content}`,
         );
-        void alert(`Failed to run action ${cfg.action.name} for message: ${content}`);
+        void alert(
+          `Failed to run action ${cfg.action.name} on ${author.username} in ${message.guild!.name} | ${(message.channel as TextChannel).name}`,
+        );
       }
     }
 

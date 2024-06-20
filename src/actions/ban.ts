@@ -1,5 +1,5 @@
 import { Action } from '../types';
-import { Message } from 'discord.js';
+import { DiscordAPIError, Message, TextChannel } from 'discord.js';
 import { container } from '@sapphire/framework';
 import BaseAction from '../lib/BaseAction';
 import { recordTotalBanScore } from '../lib/recordTotalBanScore';
@@ -20,7 +20,7 @@ class BanAction extends BaseAction {
 
   public async run(message: Message) {
     container.logger.debug(
-      `Banning user ${message.author.username}[${message.author.id}] in ${message.guild?.name}[${message.guild?.id}]\nReason: ${this.reason}`,
+      `Banning user ${message.author.username}[${message.author.id}] in ${message.guild?.name}[${message.guild?.id}] | ${(message.channel as TextChannel).name}\nReason: ${this.reason}`,
     );
 
     if (!message.member?.bannable) {
@@ -29,10 +29,23 @@ class BanAction extends BaseAction {
       );
     }
 
-    await message.member.ban({
-      reason: this.reason,
-      deleteMessageSeconds: this.deleteMessageSeconds,
-    });
+    try {
+      await message.member.ban({
+        reason: this.reason,
+        deleteMessageSeconds: this.deleteMessageSeconds,
+      });
+    } catch (e) {
+      const discordError = e as DiscordAPIError;
+      if (discordError.code === 10007) {
+        container.logger.warn(
+          `Trying to ban non-existent user ${message.member!.user.username}[${message.member!.user.id}] in ${message.member!.guild.name}[${message.member!.guild.id}]`,
+        );
+
+        return true;
+      }
+
+      throw e;
+    }
 
     await recordTotalBanScore(message.guild!.id);
 
