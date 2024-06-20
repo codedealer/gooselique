@@ -126,7 +126,7 @@ const main = async () => {
   const client = new SapphireClient({
     disableMentionPrefix: true,
     defaultPrefix: null,
-    loadDefaultErrorListeners: true,
+    loadDefaultErrorListeners: !prod,
     logger: {
       instance: logger,
     },
