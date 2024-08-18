@@ -116,7 +116,7 @@ export class VanquishCommand extends Command {
 
     await member.ban({
       reason: 'Vanquish command',
-      deleteMessageSeconds: Time.Day,
+      deleteMessageSeconds: 604800,
     });
 
     await recordTotalBanScore(member.guild.id);
