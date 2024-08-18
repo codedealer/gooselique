@@ -1,7 +1,6 @@
 import { Command } from '@sapphire/framework';
 import { generateCommandOptions } from '../lib/generateCommandOptions';
 import { ApplicationCommandType, GuildMember } from 'discord.js';
-import { Time } from '@sapphire/time-utilities';
 import { recordTotalBanScore } from '../lib/recordTotalBanScore';
 import { replyOrEdit } from '../lib/discordOps';
 
